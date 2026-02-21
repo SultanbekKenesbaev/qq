@@ -1,0 +1,549 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Virtual Try-On — MODA{% endblock %}
+{% block extra_css %}
+<style>
+/* ═══ PAGE LAYOUT ═══ */
+.tryon-page { max-width:1200px; margin:0 auto; padding:48px 40px 80px; }
+
+.tryon-hero {
+    background:linear-gradient(135deg,var(--dark) 0%,#2D1F10 100%);
+    padding:48px 60px; margin-bottom:48px;
+    display:flex; align-items:center; gap:40px;
+    position:relative; overflow:hidden;
+}
+.tryon-hero::before {
+    content:'AI'; position:absolute; right:-20px; top:-30px;
+    font-family:'Cormorant Garamond',serif; font-size:220px;
+    color:rgba(201,169,110,0.05); font-weight:600; line-height:1;
+    user-select:none; pointer-events:none;
+}
+.tryon-hero-text { flex:1; position:relative; z-index:1; }
+.tryon-tag { font-size:11px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:12px; }
+.tryon-title { font-family:'Cormorant Garamond',serif; font-size:48px; color:var(--white); font-weight:300; line-height:1.1; margin-bottom:12px; }
+.tryon-title em { color:var(--gold); font-style:italic; }
+.tryon-desc { color:rgba(255,255,255,0.45); font-size:15px; line-height:1.8; }
+.tryon-steps { display:flex; flex-direction:column; gap:12px; position:relative; z-index:1; min-width:240px; }
+.tryon-step { display:flex; align-items:center; gap:12px; padding:14px 18px; border:1px solid rgba(201,169,110,0.2); color:rgba(255,255,255,0.6); font-size:13px; }
+.tryon-step-num { width:28px; height:28px; background:var(--gold); color:var(--dark); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:500; flex-shrink:0; }
+
+/* ═══ API KEY PANEL ═══ */
+.api-panel {
+    background:var(--white); border:1px solid var(--border);
+    padding:24px 28px; margin-bottom:32px;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+}
+.api-panel-icon { font-size:28px; }
+.api-panel-text { flex:1; }
+.api-panel-title { font-size:14px; font-weight:500; color:var(--dark); margin-bottom:4px; }
+.api-panel-desc { font-size:12px; color:var(--text-muted); }
+.api-panel-desc a { color:var(--gold); text-decoration:none; }
+.api-input-wrap { display:flex; gap:8px; align-items:center; }
+.api-input { padding:10px 14px; border:1px solid var(--border); font-family:'Jost',sans-serif; font-size:13px; width:280px; outline:none; }
+.api-input:focus { border-color:var(--gold); }
+.api-save-btn { padding:10px 20px; background:var(--gold); border:none; font-family:'Jost',sans-serif; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; color:var(--dark); }
+.api-save-btn:hover { background:var(--brown); color:white; }
+.api-status { font-size:12px; padding:4px 10px; }
+.api-ok { color:var(--success); }
+.api-no { color:var(--text-muted); }
+
+/* ═══ MAIN GRID ═══ */
+.tryon-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; align-items:start; }
+
+/* ═══ PANELS ═══ */
+.panel { background:var(--white); border:1px solid var(--border); }
+.panel-head { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.panel-num { width:28px; height:28px; background:var(--dark); color:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+.panel-title { font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); }
+.panel-body { padding:24px; }
+
+/* ═══ UPLOAD ZONE ═══ */
+.upload-zone {
+    border:2px dashed var(--border); aspect-ratio:3/4;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; transition:all 0.3s; position:relative; overflow:hidden;
+    background:var(--cream);
+}
+.upload-zone:hover { border-color:var(--gold); background:var(--ivory); }
+.upload-zone.has-image { border-style:solid; border-color:var(--gold); }
+.upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:2; }
+.upload-zone img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+.upload-placeholder { display:flex; flex-direction:column; align-items:center; gap:10px; z-index:3; pointer-events:none; }
+.upload-icon { font-size:40px; }
+.upload-text { font-size:13px; color:var(--text-muted); text-align:center; line-height:1.5; }
+.upload-hint { font-size:11px; color:var(--border); text-align:center; }
+.upload-overlay { position:absolute; inset:0; z-index:3; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; }
+.upload-zone.has-image .upload-overlay { display:flex; }
+.upload-change { color:white; font-size:12px; letter-spacing:2px; text-transform:uppercase; border:1px solid white; padding:8px 16px; cursor:pointer; }
+
+/* ═══ PRODUCT SELECTOR ═══ */
+.product-search { width:100%; padding:10px 14px; border:1px solid var(--border); font-family:'Jost',sans-serif; font-size:13px; outline:none; margin-bottom:12px; }
+.product-search:focus { border-color:var(--gold); }
+.product-scroll { max-height:380px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+.product-scroll::-webkit-scrollbar { width:4px; }
+.product-scroll::-webkit-scrollbar-track { background:var(--cream); }
+.product-scroll::-webkit-scrollbar-thumb { background:var(--gold); }
+.prod-item {
+    display:flex; gap:10px; padding:10px; border:1px solid var(--border);
+    cursor:pointer; transition:all 0.2s; align-items:center;
+}
+.prod-item:hover { border-color:var(--gold); background:var(--cream); }
+.prod-item.selected { border-color:var(--gold); background:rgba(201,169,110,0.1); }
+.prod-item-img { width:52px; height:65px; object-fit:cover; flex-shrink:0; background:var(--cream); display:flex; align-items:center; justify-content:center; font-size:20px; overflow:hidden; }
+.prod-item-img img { width:100%; height:100%; object-fit:cover; }
+.prod-item-name { font-size:13px; color:var(--dark); margin-bottom:4px; }
+.prod-item-price { font-size:12px; color:var(--gold); }
+.prod-item-cat { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); }
+.prod-check { margin-left:auto; font-size:18px; color:var(--gold); opacity:0; flex-shrink:0; }
+.prod-item.selected .prod-check { opacity:1; }
+
+/* ═══ RESULT PANEL ═══ */
+.result-area { aspect-ratio:3/4; background:var(--cream); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.result-area img { width:100%; height:100%; object-fit:contain; }
+.result-empty { text-align:center; color:var(--text-muted); padding:20px; }
+.result-empty-icon { font-size:48px; margin-bottom:12px; }
+.result-empty-text { font-size:13px; line-height:1.7; }
+
+/* ═══ LOADING ═══ */
+.loading-overlay {
+    position:absolute; inset:0; background:rgba(26,20,16,0.92);
+    display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:10;
+}
+.loading-overlay.active { display:flex; }
+.spinner {
+    width:56px; height:56px; border:3px solid rgba(201,169,110,0.2);
+    border-top-color:var(--gold); border-radius:50%; animation:spin 1s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-text { color:var(--white); font-size:13px; letter-spacing:2px; text-transform:uppercase; }
+.loading-sub { color:rgba(255,255,255,0.4); font-size:12px; text-align:center; max-width:200px; }
+.progress-bar { width:180px; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--gold); border-radius:2px; width:0%; transition:width 0.5s; }
+
+/* ═══ RUN BUTTON ═══ */
+.run-btn {
+    width:100%; padding:18px; background:var(--dark); color:var(--gold);
+    border:1px solid var(--gold); font-family:'Jost',sans-serif; font-size:13px;
+    letter-spacing:3px; text-transform:uppercase; cursor:pointer;
+    transition:all 0.3s; margin-top:20px; display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.run-btn:hover:not(:disabled) { background:var(--gold); color:var(--dark); }
+.run-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* ═══ RESULT ACTIONS ═══ */
+.result-actions { display:flex; gap:10px; margin-top:16px; }
+.result-btn { flex:1; padding:12px; font-family:'Jost',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; border:none; transition:all 0.2s; text-decoration:none; text-align:center; }
+.result-btn-gold { background:var(--gold); color:var(--dark); }
+.result-btn-gold:hover { background:var(--brown); color:white; }
+.result-btn-outline { background:transparent; border:1px solid var(--dark); color:var(--dark); }
+.result-btn-outline:hover { background:var(--dark); color:white; }
+
+/* ═══ ERROR ═══ */
+.error-msg { background:#FEE2E2; border:1px solid #FCA5A5; padding:12px 16px; font-size:13px; color:#991B1B; margin-top:12px; display:none; }
+.error-msg.show { display:block; }
+
+/* ═══ TIPS ═══ */
+.tips-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:48px; }
+.tip-card { background:var(--white); border:1px solid var(--border); padding:24px; text-align:center; }
+.tip-icon { font-size:32px; margin-bottom:12px; }
+.tip-title { font-size:13px; font-weight:500; color:var(--dark); margin-bottom:6px; }
+.tip-text { font-size:12px; color:var(--text-muted); line-height:1.7; }
+
+@media(max-width:900px) {
+    .tryon-grid { grid-template-columns:1fr; }
+    .tryon-hero { flex-direction:column; padding:32px; }
+    .tips-grid { grid-template-columns:1fr; }
+    .tryon-page { padding:24px 20px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tryon-page">
+
+    <!-- ГЕРОЙ -->
+    <div class="tryon-hero">
+        <div class="tryon-hero-text">
+            <div class="tryon-tag">🤖 AI Технологиясы</div>
+            <h1 class="tryon-title">Virtual<br><em>Try-On</em></h1>
+            <p class="tryon-desc">Суретиңизди жүклеңиз, кийим таңлаңыз.<br>AI технологиясы 30-60 секундта кийимди сизге кийгизеди.</p>
+        </div>
+        <div class="tryon-steps">
+            <div class="tryon-step"><div class="tryon-step-num">1</div>Replicate API Key кириңиз</div>
+            <div class="tryon-step"><div class="tryon-step-num">2</div>Суретиңизди жүклеңиз</div>
+            <div class="tryon-step"><div class="tryon-step-num">3</div>Кийим таңлаңыз</div>
+            <div class="tryon-step"><div class="tryon-step-num">4</div>AI нәтийжесин көриңиз</div>
+        </div>
+    </div>
+
+    <!-- API KEY ПАНЕЛИ -->
+    <div class="api-panel">
+        <div class="api-panel-icon">🔑</div>
+        <div class="api-panel-text">
+            <div class="api-panel-title">Replicate API Key</div>
+            <div class="api-panel-desc">
+                <a href="https://replicate.com" target="_blank">replicate.com</a> сайтынан тегин тіркелиңиз → Account → API Tokens → Token жасаңыз
+                <strong style="color:var(--gold);"> (тегин $5 кредит беріледи — ~100 сурет)</strong>
+            </div>
+        </div>
+        <div class="api-input-wrap">
+            <input type="password" class="api-input" id="apiKeyInput" placeholder="r8_xxxxxxxxxxxxxxxx">
+            <button class="api-save-btn" onclick="saveApiKey()">Сақлаў</button>
+            <span class="api-status api-no" id="apiStatus">⚪ Кірилмеген</span>
+        </div>
+    </div>
+
+    <!-- НЕГІЗГИ СЕТКА -->
+    <div class="tryon-grid">
+
+        <!-- 1: АДАМ СУРЕТІ -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-num">1</div>
+                <div class="panel-title">Сизиң Суретиңиз</div>
+            </div>
+            <div class="panel-body">
+                <div class="upload-zone" id="personZone">
+                    <input type="file" id="personInput" accept="image/*" onchange="handlePersonUpload(event)">
+                    <div class="upload-placeholder" id="personPlaceholder">
+                        <div class="upload-icon">🧍</div>
+                        <div class="upload-text">Суретиңизди жүклеңиз</div>
+                        <div class="upload-hint">JPG, PNG • Толық бой суреті жақсы нәтиже береди</div>
+                    </div>
+                    <div class="upload-overlay">
+                        <div class="upload-change" onclick="document.getElementById('personInput').click()">✎ Алмастырыў</div>
+                    </div>
+                </div>
+                <div style="margin-top:12px;padding:10px;background:var(--cream);font-size:12px;color:var(--text-muted);line-height:1.6;">
+                    💡 <strong>Кеңес:</strong> Ақ яки жарқын фонда, толық бой, тура қараған сурет еңири жақсы нәтиже береди
+                </div>
+            </div>
+        </div>
+
+        <!-- 2: КИЙИМ ТАҢЛАЎ -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-num">2</div>
+                <div class="panel-title">Кийим Таңлаңыз</div>
+            </div>
+            <div class="panel-body">
+                <input type="text" class="product-search" id="productSearch" placeholder="🔍 Кийим іздеў..." oninput="filterProducts()">
+                <div class="product-scroll" id="productList">
+                    {% for p in products %}
+                    <div class="prod-item" id="prod_{{ p.pk }}" onclick="selectProduct({{ p.pk }}, '{{ p.name|escapejs }}', '{{ p.get_category_display }}')">
+                        <div class="prod-item-img">
+                            {% if p.main_image %}
+                            <img src="{{ p.main_image.url }}" alt="{{ p.name }}">
+                            {% else %}
+                            {% if p.category == 'ustki' %}🧥{% elif p.category == 'oyoq' %}👟{% elif p.category == 'sport' %}⚡{% else %}👗{% endif %}
+                            {% endif %}
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div class="prod-item-cat">{{ p.get_category_display }}</div>
+                            <div class="prod-item-name">{{ p.name }}</div>
+                            <div class="prod-item-price">{{ p.price|floatformat:0 }} сўм</div>
+                        </div>
+                        <div class="prod-check">✓</div>
+                    </div>
+                    {% empty %}
+                    <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">
+                        Суретли өнимлер жоқ
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if product %}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        selectProduct({{ product.pk }}, '{{ product.name|escapejs }}', '{{ product.get_category_display }}');
+                    });
+                </script>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 3: НӘТИЙЖЕ -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-num">3</div>
+                <div class="panel-title">AI Нәтийжеси</div>
+            </div>
+            <div class="panel-body">
+                <div class="result-area" id="resultArea">
+                    <div class="result-empty" id="resultEmpty">
+                        <div class="result-empty-icon">✨</div>
+                        <div class="result-empty-text">Сурет ҳәм кийим таңлап,<br>"AI Кийгизиў" баспасын басыңыз</div>
+                    </div>
+                    <img id="resultImg" style="display:none;" alt="Try-on нәтийжеси">
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="spinner"></div>
+                        <div class="loading-text">AI Ислемекте</div>
+                        <div class="loading-sub" id="loadingStatus">Сурет жибериливатыр...</div>
+                        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                    </div>
+                </div>
+                <div class="error-msg" id="errorMsg"></div>
+
+                <button class="run-btn" id="runBtn" onclick="runTryOn()" disabled>
+                    <span>✨</span> AI Кийгизиў
+                </button>
+
+                <div class="result-actions" id="resultActions" style="display:none;">
+                    <a id="downloadBtn" href="#" class="result-btn result-btn-outline" download="moda_tryon.jpg">⬇ Жүктеп алыў</a>
+                    <a id="buyBtn" href="#" class="result-btn result-btn-gold">🛍 Сатып Алыў</a>
+                </div>
+
+                <div style="margin-top:16px;font-size:11px;color:var(--text-muted);text-align:center;line-height:1.7;">
+                    Ислетилетуғын технология: <strong>IDM-VTON</strong><br>
+                    Орташа ўақыт: 30–90 секунд
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- КЕҢЕСЛЕР -->
+    <div class="tips-grid">
+        <div class="tip-card">
+            <div class="tip-icon">📸</div>
+            <div class="tip-title">Жақсы Сурет</div>
+            <div class="tip-text">Тура қараған, толық бой, жарқын жерде түсирилген сурет еңири жақсы нәтиже береди</div>
+        </div>
+        <div class="tip-card">
+            <div class="tip-icon">👕</div>
+            <div class="tip-title">Кийим Таңлаў</div>
+            <div class="tip-text">Үстки кийимлер (кейлек, пиджак, жемпер) еңири жақсы кийгизиледи</div>
+        </div>
+        <div class="tip-card">
+            <div class="tip-icon">⏱</div>
+            <div class="tip-title">Сабыр Болыңыз</div>
+            <div class="tip-text">AI модели 30–90 секунд ислейди. Биринши рет баяу болыўы мүмкин</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ═══ STATE ═══
+let apiKey = localStorage.getItem('replicate_api_key') || '';
+let selectedProductId = null;
+let selectedProductName = '';
+let currentBuyUrl = '#';
+let pollInterval = null;
+
+// ═══ API KEY ═══
+function saveApiKey() {
+    const val = document.getElementById('apiKeyInput').value.trim();
+    if (!val) { showError('API Key бос болмасын!'); return; }
+    if (!val.startsWith('r8_') && !val.startsWith('r8')) {
+        showError('API Key "r8_" менен басланыўы керек!'); return;
+    }
+    apiKey = val;
+    localStorage.setItem('replicate_api_key', val);
+    document.getElementById('apiStatus').textContent = '✅ Сақланды';
+    document.getElementById('apiStatus').className = 'api-status api-ok';
+    checkRunBtn();
+}
+
+// Бет жүкленгенде API key тексериў
+window.addEventListener('DOMContentLoaded', function() {
+    if (apiKey) {
+        document.getElementById('apiKeyInput').value = apiKey;
+        document.getElementById('apiStatus').textContent = '✅ Сақланды';
+        document.getElementById('apiStatus').className = 'api-status api-ok';
+    }
+    checkRunBtn();
+});
+
+// ═══ PERSON IMAGE ═══
+function handlePersonUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const zone = document.getElementById('personZone');
+    const placeholder = document.getElementById('personPlaceholder');
+
+    // Remove old image if exists
+    const oldImg = zone.querySelector('img.person-preview');
+    if (oldImg) oldImg.remove();
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'person-preview';
+        img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;';
+        zone.appendChild(img);
+        zone.classList.add('has-image');
+        placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+    checkRunBtn();
+}
+
+// ═══ PRODUCT SELECT ═══
+function selectProduct(id, name, category) {
+    // Алдыңғы таңлаўды алыў
+    document.querySelectorAll('.prod-item').forEach(el => el.classList.remove('selected'));
+    const item = document.getElementById('prod_' + id);
+    if (item) item.classList.add('selected');
+
+    selectedProductId = id;
+    selectedProductName = name;
+    currentBuyUrl = '/products/' + id + '/';
+    document.getElementById('buyBtn').href = currentBuyUrl;
+    checkRunBtn();
+}
+
+function filterProducts() {
+    const q = document.getElementById('productSearch').value.toLowerCase();
+    document.querySelectorAll('.prod-item').forEach(function(el) {
+        const name = el.querySelector('.prod-item-name').textContent.toLowerCase();
+        el.style.display = name.includes(q) ? '' : 'none';
+    });
+}
+
+// ═══ CHECK RUN BUTTON ═══
+function checkRunBtn() {
+    const personFile = document.getElementById('personInput').files[0];
+    const btn = document.getElementById('runBtn');
+    btn.disabled = !(apiKey && personFile && selectedProductId);
+}
+
+// ═══ RUN TRY-ON ═══
+function runTryOn() {
+    const personFile = document.getElementById('personInput').files[0];
+
+    if (!apiKey) { showError('Birinshi API Key kiriñiz!'); return; }
+    if (!personFile) { showError('Suretińizdi júkleñiz!'); return; }
+    if (!selectedProductId) { showError('Kiyim tañlañiz!'); return; }
+
+    // UI state
+    hideError();
+    showLoading('Surat jiberilwatir...');
+    document.getElementById('runBtn').disabled = true;
+    document.getElementById('resultActions').style.display = 'none';
+    setProgress(5);
+
+    // FormData
+    const formData = new FormData();
+    formData.append('api_key', apiKey);
+    formData.append('product_id', selectedProductId);
+    formData.append('person_image', personFile);
+
+    // CSRF
+    const csrf = getCookie('csrftoken');
+
+    fetch('/try-on/api/run/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrf },
+        body: formData,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            hideLoading();
+            showError(data.error);
+            document.getElementById('runBtn').disabled = false;
+            return;
+        }
+        // Poll for result
+        setProgress(20);
+        updateLoadingStatus('AI model ishlewde...');
+        pollResult(data.prediction_id);
+    })
+    .catch(err => {
+        hideLoading();
+        showError('Tariyat qatesi: ' + err.message);
+        document.getElementById('runBtn').disabled = false;
+    });
+}
+
+// ═══ POLL ═══
+function pollResult(predictionId) {
+    let elapsed = 0;
+    let progress = 20;
+
+    pollInterval = setInterval(function() {
+        elapsed += 3;
+        // Progress simulation
+        if (progress < 85) progress += Math.random() * 5;
+        setProgress(Math.min(progress, 85));
+
+        if (elapsed < 30) updateLoadingStatus('AI kiyimdi tahlillewde... (' + elapsed + 's)');
+        else if (elapsed < 60) updateLoadingStatus('Suret jasalwatir... (' + elapsed + 's)');
+        else updateLoadingStatus('Jaqinlap qaldi... (' + elapsed + 's)');
+
+        fetch('/try-on/api/status/' + predictionId + '/?api_key=' + encodeURIComponent(apiKey))
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'succeeded') {
+                clearInterval(pollInterval);
+                setProgress(100);
+                const outputUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+                if (outputUrl) {
+                    showResult(outputUrl);
+                } else {
+                    hideLoading();
+                    showError('Natiyje alınbadı. Qayta urınıp kóriñiz.');
+                    document.getElementById('runBtn').disabled = false;
+                }
+            } else if (data.status === 'failed' || data.status === 'canceled') {
+                clearInterval(pollInterval);
+                hideLoading();
+                showError('AI qatesi: ' + (data.error || data.status));
+                document.getElementById('runBtn').disabled = false;
+            }
+        })
+        .catch(() => {}); // silently retry
+    }, 3000);
+}
+
+// ═══ SHOW RESULT ═══
+function showResult(url) {
+    hideLoading();
+    document.getElementById('resultEmpty').style.display = 'none';
+    const img = document.getElementById('resultImg');
+    img.src = url;
+    img.style.display = 'block';
+    document.getElementById('downloadBtn').href = url;
+    document.getElementById('resultActions').style.display = 'flex';
+    document.getElementById('runBtn').disabled = false;
+    document.getElementById('runBtn').innerHTML = '<span>✨</span> Qayta Kiygiziw';
+}
+
+// ═══ HELPERS ═══
+function showLoading(text) {
+    document.getElementById('loadingOverlay').classList.add('active');
+    document.getElementById('loadingStatus').textContent = text || '...';
+}
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.remove('active');
+}
+function updateLoadingStatus(text) {
+    document.getElementById('loadingStatus').textContent = text;
+}
+function setProgress(pct) {
+    document.getElementById('progressFill').style.width = pct + '%';
+}
+function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = '⚠️ ' + msg;
+    el.classList.add('show');
+}
+function hideError() {
+    document.getElementById('errorMsg').classList.remove('show');
+}
+function getCookie(name) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+    });
+    return v;
+}
+
+// personInput change listener
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('personInput').addEventListener('change', checkRunBtn);
+});
+</script>
+{% endblock %}

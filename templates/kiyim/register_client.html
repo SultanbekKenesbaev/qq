@@ -1,0 +1,100 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Klient Дизимге алыныў — MODA{% endblock %}
+{% block extra_css %}
+<style>
+.auth-page { min-height:calc(100vh - 140px); display:grid; grid-template-columns:1fr 1fr; }
+.auth-left { background:var(--dark); padding:80px 60px; display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden; }
+.auth-left::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 30% 50%,rgba(201,169,110,0.15),transparent 60%); }
+.auth-left>* { position:relative; z-index:1; }
+.auth-brand { font-family:'Cormorant Garamond',serif; font-size:48px; color:var(--gold); letter-spacing:4px; margin-bottom:24px; }
+.auth-heading { font-family:'Cormorant Garamond',serif; font-size:36px; color:var(--white); font-weight:300; margin-bottom:16px; }
+.auth-desc { color:rgba(255,255,255,0.4); font-size:15px; line-height:1.9; }
+.ben-list { margin-top:40px; display:flex; flex-direction:column; gap:14px; }
+.ben-item { display:flex; align-items:center; gap:14px; color:rgba(255,255,255,0.5); font-size:14px; }
+.ben-icon { width:36px; height:36px; background:rgba(201,169,110,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.auth-right { padding:60px 80px; display:flex; flex-direction:column; justify-content:center; background:var(--ivory); }
+.auth-form-title { font-family:'Cormorant Garamond',serif; font-size:36px; color:var(--dark); margin-bottom:8px; }
+.auth-form-sub { color:var(--text-muted); font-size:14px; margin-bottom:36px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.bmi-box { background:var(--white); border:1px solid var(--gold); padding:16px 20px; margin-top:16px; display:none; }
+.bmi-val { font-family:'Cormorant Garamond',serif; font-size:32px; color:var(--gold); }
+@media(max-width:768px){.auth-page{grid-template-columns:1fr;}.auth-left{display:none;}.auth-right{padding:40px 24px;}.form-row{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-page">
+    <div class="auth-left">
+        <div class="auth-brand">MODA</div>
+        <h2 class="auth-heading">Сизиң Размериңиз — Биздиң Ис</h2>
+        <p class="auth-desc">Бойыңыз ҳәм салмағыңызды кириңиз. AI технологиясы сизге ең мас кийимлерди таўсия береди.</p>
+        <div class="ben-list">
+            <div class="ben-item"><div class="ben-icon">🤖</div><span>BMI есаплаў ҳәм ақыллы таўсиялар</span></div>
+            <div class="ben-item"><div class="ben-icon">📐</div><span>Сизиң размериңизге мас өнимлер</span></div>
+            <div class="ben-item"><div class="ben-icon">🛍️</div><span>Жеңил алыў ҳәм тез жеткериў</span></div>
+        </div>
+    </div>
+    <div class="auth-right">
+        <h1 class="auth-form-title">Дизимге Алыныў</h1>
+        <p class="auth-form-sub">Klient аккаунты жасаңыз</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Ат</label><input type="text" name="first_name" class="form-control" required value="{{ form.first_name.value|default:'' }}"></div>
+                <div class="form-group"><label class="form-label">Фамилия</label><input type="text" name="last_name" class="form-control" required value="{{ form.last_name.value|default:'' }}"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Логин</label><input type="text" name="username" class="form-control" required value="{{ form.username.value|default:'' }}"></div>
+                <div class="form-group"><label class="form-label">Телефон</label><input type="text" name="phone" class="form-control" placeholder="+998..." value="{{ form.phone.value|default:'' }}"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Жыныс</label>
+                <select name="gender" class="form-control">
+                    <option value="male">Еркек</option>
+                    <option value="female">Аял</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Бой (см)</label><input type="number" name="height" id="height" class="form-control" min="100" max="250" required value="{{ form.height.value|default:'' }}" oninput="calcBMI()"></div>
+                <div class="form-group"><label class="form-label">Салмақ (кг)</label><input type="number" name="weight" id="weight" class="form-control" min="30" max="300" required value="{{ form.weight.value|default:'' }}" oninput="calcBMI()"></div>
+            </div>
+            <div class="bmi-box" id="bmiBox">
+                <div style="font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Сизиң BMI Индексиңиз</div>
+                <div class="bmi-val" id="bmiVal">—</div>
+                <div style="font-size:13px;color:var(--text-muted);margin-top:4px;" id="bmiCat">—</div>
+            </div>
+            <div class="form-group" style="margin-top:16px;">
+                <label class="form-label">Размер</label>
+                <select name="size" class="form-control">
+                    <option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Пароль</label><input type="password" name="password1" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">Пароль растаў</label><input type="password" name="password2" class="form-control" required></div>
+            </div>
+            {% if form.errors %}<div style="background:#FEE2E2;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--error);">{% for f,e in form.errors.items %}{{ e|join:', ' }}{% endfor %}</div>{% endif %}
+            <button type="submit" class="btn btn-gold" style="width:100%;margin-top:8px;">Дизимге Алыныў</button>
+        </form>
+        <p style="margin-top:24px;text-align:center;font-size:14px;color:var(--text-muted);">Аккаунтыңыз бар ма? <a href="{% url 'login' %}" style="color:var(--gold);text-decoration:none;">Кириў</a></p>
+        <p style="text-align:center;margin-top:8px;"><a href="{% url 'register_seller' %}" style="color:var(--text-muted);font-size:13px;text-decoration:none;">Дүкан ашыў →</a></p>
+    </div>
+</div>
+<script>
+function calcBMI(){
+    const h=parseFloat(document.getElementById('height').value);
+    const w=parseFloat(document.getElementById('weight').value);
+    const box=document.getElementById('bmiBox');
+    if(h>0&&w>0){
+        const bmi=w/((h/100)**2);
+        document.getElementById('bmiVal').textContent=bmi.toFixed(1);
+        let cat='';
+        if(bmi<18.5)cat='⚠️ Арық';
+        else if(bmi<25)cat='✅ Қалыпты';
+        else if(bmi<30)cat='⚠️ Артықша салмақ';
+        else cat='🔴 Семириўшиликте';
+        document.getElementById('bmiCat').textContent=cat;
+        box.style.display='block';
+    }
+}
+</script>
+{% endblock %}

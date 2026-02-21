@@ -1,0 +1,59 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Профиль — MODA{% endblock %}
+{% block content %}
+<div style="max-width:700px;margin:60px auto;padding:0 40px;">
+    <a href="{% url 'client_dashboard' %}" style="display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);text-decoration:none;font-size:13px;margin-bottom:32px;">← Дашбордқа қайтыў</a>
+    <div style="margin-bottom:40px;">
+        <div style="font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">Профиль</div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--dark);">Профиль Таҳрирлеў</h1>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="background:var(--white);border:1px solid var(--border);padding:40px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div class="form-group"><label class="form-label">Ат</label><input type="text" name="first_name" class="form-control" value="{{ user.first_name }}"></div>
+                <div class="form-group"><label class="form-label">Фамилия</label><input type="text" name="last_name" class="form-control" value="{{ user.last_name }}"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Телефон</label><input type="text" name="phone" class="form-control" value="{{ user.phone }}"></div>
+            <div class="form-group">
+                <label class="form-label">Жыныс</label>
+                <select name="gender" class="form-control">
+                    <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Еркек</option>
+                    <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Аял</option>
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+                <div class="form-group"><label class="form-label">Бой (см)</label><input type="number" name="height" class="form-control" value="{{ user.height|default:'' }}" min="100" max="250"></div>
+                <div class="form-group"><label class="form-label">Салмақ (кг)</label><input type="number" name="weight" class="form-control" value="{{ user.weight|default:'' }}" min="30" max="300"></div>
+                <div class="form-group">
+                    <label class="form-label">Размер</label>
+                    <select name="size" class="form-control">
+                        <option {% if user.size == 'XS' %}selected{% endif %}>XS</option>
+                        <option {% if user.size == 'S' %}selected{% endif %}>S</option>
+                        <option {% if user.size == 'M' %}selected{% endif %}>M</option>
+                        <option {% if user.size == 'L' %}selected{% endif %}>L</option>
+                        <option {% if user.size == 'XL' %}selected{% endif %}>XL</option>
+                        <option {% if user.size == 'XXL' %}selected{% endif %}>XXL</option>
+                        <option {% if user.size == 'XXXL' %}selected{% endif %}>XXXL</option>
+                    </select>
+                </div>
+            </div>
+            {% if user.bmi %}
+            <div style="background:var(--cream);border:1px solid var(--gold);padding:16px 20px;margin-bottom:20px;">
+                <div style="font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Сизиң BMI Индексиңиз</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);">{{ user.bmi }}</div>
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label class="form-label">Аватар</label>
+                {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:12px;display:block;">{% endif %}
+                <input type="file" name="avatar" class="form-control" accept="image/*">
+            </div>
+            <div style="display:flex;gap:16px;justify-content:flex-end;margin-top:8px;">
+                <a href="{% url 'client_dashboard' %}" class="btn btn-outline">Бас тартыў</a>
+                <button type="submit" class="btn btn-gold">Сақлаў</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

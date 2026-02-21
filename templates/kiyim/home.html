@@ -1,0 +1,135 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}MODA — Кийим Дүканы{% endblock %}
+{% block extra_css %}
+<style>
+.hero { height:92vh; min-height:600px; background:linear-gradient(135deg,var(--dark) 0%,#2D1F10 50%,#1A0F05 100%); display:flex; align-items:center; position:relative; overflow:hidden; }
+.hero-bg { position:absolute; inset:0; background-image:repeating-linear-gradient(45deg,rgba(201,169,110,0.03) 0px,rgba(201,169,110,0.03) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(-45deg,rgba(201,169,110,0.03) 0px,rgba(201,169,110,0.03) 1px,transparent 1px,transparent 60px); }
+.hero-content { position:relative; z-index:2; padding:0 80px; max-width:700px; animation:fadeUp 1s ease forwards; }
+.hero-tag { font-size:11px; letter-spacing:5px; text-transform:uppercase; color:var(--gold); margin-bottom:24px; display:flex; align-items:center; gap:12px; }
+.hero-tag::before { content:''; width:40px; height:1px; background:var(--gold); }
+.hero-title { font-family:'Cormorant Garamond',serif; font-size:clamp(48px,7vw,96px); font-weight:300; color:var(--white); line-height:1.05; margin-bottom:28px; }
+.hero-title em { color:var(--gold); font-style:italic; }
+.hero-desc { color:rgba(255,255,255,0.5); font-size:16px; margin-bottom:40px; max-width:480px; }
+.hero-actions { display:flex; gap:16px; flex-wrap:wrap; }
+.hero-scroll { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.3); font-size:11px; letter-spacing:3px; text-transform:uppercase; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.hero-scroll::after { content:''; width:1px; height:40px; background:linear-gradient(var(--gold),transparent); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+.marquee-wrap { background:var(--gold); padding:12px 0; overflow:hidden; }
+.marquee-text { display:flex; gap:0; white-space:nowrap; animation:marquee 20s linear infinite; font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--dark); font-weight:500; }
+.marquee-text span { padding:0 30px; }
+@keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+.cats-bar { background:var(--white); border-bottom:1px solid var(--border); padding:0 40px; display:flex; overflow-x:auto; }
+.cat-item { padding:20px 28px; text-decoration:none; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); white-space:nowrap; border-bottom:2px solid transparent; transition:all 0.3s; display:flex; align-items:center; gap:8px; }
+.cat-item:hover { color:var(--gold); border-bottom-color:var(--gold); }
+
+.featured-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:0 40px; }
+@media(max-width:1200px){.featured-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:768px){.featured-grid{grid-template-columns:repeat(2,1fr);padding:0 20px;}}
+
+.promo-banner { background:var(--dark); margin:0 40px 80px; padding:80px 60px; display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; position:relative; overflow:hidden; }
+.promo-banner::before { content:'MODA'; position:absolute; right:-20px; top:-40px; font-family:'Cormorant Garamond',serif; font-size:200px; color:rgba(201,169,110,0.06); font-weight:600; line-height:1; user-select:none; }
+.promo-feats { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.promo-feat { padding:20px; border:1px solid rgba(201,169,110,0.2); text-align:center; }
+.promo-feat-icon { font-size:28px; margin-bottom:8px; }
+.promo-feat-title { color:var(--gold); font-size:13px; margin-bottom:4px; }
+.promo-feat-text { color:rgba(255,255,255,0.4); font-size:12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ГЕРОЙ -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-tag">Жаңа коллекция 2024</div>
+        <h1 class="hero-title">Сизиң<br><em>Стилиңиз</em><br>Бизде</h1>
+        <p class="hero-desc">Қарақалпақстанның еңири үлкен кийим платформасы. AI жәрдеминде размериңизге ең мас кийимлерди табың.</p>
+        <div class="hero-actions">
+            <a href="{% url 'product_list' %}" class="btn btn-gold">Алыўды Баслаў</a>
+            {% if not user.is_authenticated %}<a href="{% url 'register_choice' %}" class="btn btn-primary">Дизимге алыныў</a>{% endif %}
+        </div>
+    </div>
+    <div class="hero-scroll">Төмен</div>
+</section>
+
+<!-- ЖАРИЯЛАНЫЎ ЖОЛАҒЫ -->
+<div class="marquee-wrap">
+    <div class="marquee-text">
+        <span>Жаңа Коллекция</span><span>•</span><span>Тегин Жеткериў</span><span>•</span>
+        <span>AI Таўсия</span><span>•</span><span>Сапалы Кийим</span><span>•</span>
+        <span>Жеңил Қайтарыў</span><span>•</span><span>Жаңа Коллекция</span><span>•</span>
+        <span>Тегин Жеткериў</span><span>•</span><span>AI Таўсия</span><span>•</span>
+        <span>Сапалы Кийим</span><span>•</span><span>Жеңил Қайтарыў</span><span>•</span>
+    </div>
+</div>
+
+<!-- КАТЕГОРИЯЛАР -->
+<div class="cats-bar">
+    {% for key, label in categories %}
+    <a href="{% url 'product_list' %}?category={{ key }}" class="cat-item">
+        {% if key == 'ustki' %}🧥{% elif key == 'ichki' %}👕{% elif key == 'jemper' %}🧶{% elif key == 'pidjak' %}🤵{% elif key == 'sport' %}⚡{% elif key == 'oyoq' %}👟{% else %}💎{% endif %}
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- ТАНЫЛҒАН ӨНИМЛЕР -->
+<section style="padding-bottom:80px;">
+    <div class="section-header">
+        <div class="section-tag">Популяр Өнимлер</div>
+        <h2 class="section-title">Таңланған Коллекция</h2>
+    </div>
+    <div class="featured-grid">
+        {% for product in featured %}
+        <a href="{% url 'product_detail' product.pk %}" style="text-decoration:none;">
+        <div class="product-card">
+            <div class="product-img-wrap">
+                {% if product.main_image %}<img src="{{ product.main_image.url }}" alt="{{ product.name }}" loading="lazy">
+                {% else %}<div class="product-no-img">{% if product.category == 'ustki' %}🧥{% elif product.category == 'oyoq' %}👟{% elif product.category == 'sport' %}⚡{% else %}👗{% endif %}</div>{% endif %}
+                <span class="product-badge">{{ product.get_category_display }}</span>
+            </div>
+            <div class="product-info">
+                <div class="product-category">{{ product.seller.shop_name }}</div>
+                <div class="product-name">{{ product.name }}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span class="product-price">{{ product.price|floatformat:0 }} сўм</span>
+                    <span style="font-size:11px;color:var(--text-muted);">{{ product.get_gender_display }}</span>
+                </div>
+            </div>
+        </div>
+        </a>
+        {% empty %}
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">
+            <div style="font-size:48px;margin-bottom:16px;">🛍️</div>
+            <p>Ҳәзирше өним жоқ</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="text-align:center;margin-top:40px;">
+        <a href="{% url 'product_list' %}" class="btn btn-outline">Ҳәммесин Көриў</a>
+    </div>
+</section>
+
+<!-- ПРОМО БАННЕР -->
+<div class="promo-banner">
+    <div>
+        <div style="color:var(--gold);font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;">Неге Бизди Таңлайды</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--white);font-weight:300;line-height:1.2;margin-bottom:20px;">Ақыллы Таңлаў — Сизиң Размериңиз</h2>
+        <p style="color:rgba(255,255,255,0.5);margin-bottom:32px;font-size:15px;">AI технологиясы бойыңыз, салмағыңыз ҳәм размериңиз бойынша сизге ең мас кийимлерди таўсия етеди.</p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'register_client' %}" class="btn btn-gold">Ҳәзир Дизимге Алыныў</a>
+        {% else %}
+        <a href="{% url 'client_dashboard' %}" class="btn btn-gold">Таўсиялар Алыў</a>
+        {% endif %}
+    </div>
+    <div class="promo-feats">
+        <div class="promo-feat"><div class="promo-feat-icon">🤖</div><div class="promo-feat-title">AI Таўсия</div><div class="promo-feat-text">Размериңизге мас өнимлер</div></div>
+        <div class="promo-feat"><div class="promo-feat-icon">📦</div><div class="promo-feat-title">Тез Жеткериў</div><div class="promo-feat-text">1-3 күн ишинде</div></div>
+        <div class="promo-feat"><div class="promo-feat-icon">↩️</div><div class="promo-feat-title">Қайтарыў</div><div class="promo-feat-text">14 күн ишинде</div></div>
+        <div class="promo-feat"><div class="promo-feat-icon">🔒</div><div class="promo-feat-title">Қәўипсиз Төлем</div><div class="promo-feat-text">Қорғалған транзакция</div></div>
+    </div>
+</div>
+{% endblock %}

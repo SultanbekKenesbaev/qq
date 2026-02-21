@@ -1,0 +1,36 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Буйрытмалар — MODA{% endblock %}
+{% block content %}
+<div style="max-width:1000px;margin:60px auto;padding:0 40px;">
+    <div style="margin-bottom:40px;">
+        <div style="font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">Тарийх</div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;color:var(--dark);">Менің Буйрытмаларым</h1>
+    </div>
+    {% if orders %}
+    <table class="data-table" style="background:var(--white);">
+        <thead>
+            <tr><th>Буйрытма №</th><th>Сана</th><th>Өнимлер</th><th>Жалпы</th><th>Статус</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td style="font-weight:500;">#{{ order.pk }}</td>
+                <td style="color:var(--text-muted);">{{ order.created_at|date:"d.m.Y" }}</td>
+                <td style="color:var(--text-muted);">{{ order.items.count }} өним</td>
+                <td style="color:var(--gold);font-weight:500;">{{ order.total_price|floatformat:0 }} сўм</td>
+                <td><span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                <td><a href="{% url 'order_detail' order.pk %}" style="color:var(--gold);font-size:12px;text-decoration:none;letter-spacing:1px;">Толық →</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;padding:80px;border:1px dashed var(--border);">
+        <div style="font-size:64px;margin-bottom:20px;">📦</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--dark);margin-bottom:12px;">Буйрытма Жоқ</h2>
+        <p style="color:var(--text-muted);margin-bottom:32px;">Ҳәзирше буйрытма бермединиз</p>
+        <a href="{% url 'product_list' %}" class="btn btn-gold">Алыўды Баслаў</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

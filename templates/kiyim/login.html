@@ -1,0 +1,38 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Кириў — MODA{% endblock %}
+{% block extra_css %}
+<style>
+.login-page { min-height:calc(100vh - 140px); display:flex; align-items:center; justify-content:center; padding:60px 20px; background:linear-gradient(160deg,var(--dark) 0%,#2D1F10 100%); position:relative; overflow:hidden; }
+.login-page::before { content:'MODA'; position:absolute; left:-60px; bottom:-60px; font-family:'Cormorant Garamond',serif; font-size:300px; color:rgba(201,169,110,0.05); font-weight:600; user-select:none; pointer-events:none; line-height:1; }
+.login-card { background:var(--ivory); width:100%; max-width:440px; padding:56px 48px; position:relative; z-index:1; }
+.login-logo { font-family:'Cormorant Garamond',serif; font-size:36px; color:var(--gold); letter-spacing:6px; text-align:center; margin-bottom:8px; }
+.login-title { font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--dark); text-align:center; margin-bottom:6px; }
+.login-sub { text-align:center; color:var(--text-muted); font-size:13px; margin-bottom:36px; }
+.login-div { display:flex; align-items:center; gap:12px; margin:24px 0; color:var(--text-muted); font-size:12px; }
+.login-div::before,.login-div::after { content:''; flex:1; height:1px; background:var(--border); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-logo">MODA</div>
+        <h1 class="login-title">Қайта Кириңиз</h1>
+        <p class="login-sub">Аккаунтыңызға кириңиз</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Логин</label>
+                <input type="text" name="username" class="form-control" required autofocus placeholder="Логиниңизди кириңиз">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-control" required placeholder="Пароліңизди кириңиз">
+            </div>
+            {% if messages %}{% for msg in messages %}<div style="background:#FEE2E2;padding:12px;margin-bottom:12px;font-size:13px;color:var(--error);">{{ msg }}</div>{% endfor %}{% endif %}
+            <button type="submit" class="btn btn-gold" style="width:100%;margin-top:8px;">Кириў</button>
+        </form>
+        <div class="login-div">яки</div>
+        <p style="text-align:center;font-size:14px;color:var(--text-muted);">Аккаунтыңыз жоқ па? <a href="{% url 'register_choice' %}" style="color:var(--gold);text-decoration:none;">Дизимге алыныў →</a></p>
+    </div>
+</div>
+{% endblock %}

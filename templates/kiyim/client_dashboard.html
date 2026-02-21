@@ -1,0 +1,139 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Менің Дашбордым — MODA{% endblock %}
+{% block extra_css %}
+<style>
+.bmi-ring { width:120px; height:120px; border-radius:50%; background:conic-gradient(var(--gold) 0deg,var(--gold) 270deg,rgba(201,169,110,0.2) 270deg); display:flex; align-items:center; justify-content:center; }
+.bmi-ring-inner { width:88px; height:88px; background:var(--white); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.bmi-num { font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--gold); line-height:1; }
+.profile-card { background:linear-gradient(135deg,var(--dark) 0%,#2D1F10 100%); padding:32px; display:flex; align-items:center; gap:32px; margin-bottom:32px; position:relative; overflow:hidden; }
+.profile-card::before { content:''; position:absolute; right:-40px; top:-40px; width:200px; height:200px; border-radius:50%; border:60px solid rgba(201,169,110,0.08); }
+.profile-avatar { width:80px; height:80px; border-radius:50%; background:rgba(201,169,110,0.2); border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0; overflow:hidden; }
+.profile-avatar img { width:100%; height:100%; object-fit:cover; }
+.profile-name { font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--white); }
+.profile-tags { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.profile-tag { padding:4px 12px; background:rgba(201,169,110,0.15); border:1px solid rgba(201,169,110,0.3); color:var(--gold); font-size:11px; letter-spacing:1px; text-transform:uppercase; }
+.ai-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#C9A96E,#8B6914); color:var(--dark); padding:6px 14px; font-size:11px; letter-spacing:2px; text-transform:uppercase; margin-bottom:20px; }
+.cat-pills { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px; }
+.cat-pill { padding:8px 18px; border:1px solid var(--border); font-size:12px; letter-spacing:1.5px; text-transform:uppercase; text-decoration:none; color:var(--text-muted); transition:all 0.2s; }
+.cat-pill:hover { background:var(--dark); color:var(--gold); border-color:var(--dark); }
+.rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+    <!-- БОКОВАЯ ПАНЕЛЬ -->
+    <div class="dashboard-sidebar">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold);letter-spacing:4px;margin-bottom:32px;">MODA</div>
+        <a href="{% url 'client_dashboard' %}" class="dash-nav-item active"><span class="dash-nav-icon">🏠</span> Бас бет</a>
+        <a href="{% url 'product_list' %}" class="dash-nav-item"><span class="dash-nav-icon">🛍️</span> Барлық Өнимлер</a>
+        <a href="{% url 'cart' %}" class="dash-nav-item"><span class="dash-nav-icon">🛒</span> Себет{% if cart_count > 0 %}<span style="margin-left:auto;background:var(--gold);color:var(--dark);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;">{{ cart_count }}</span>{% endif %}</a>
+        <a href="{% url 'orders_list' %}" class="dash-nav-item"><span class="dash-nav-icon">📦</span> Буйрытмалар</a>
+        <a href="{% url 'virtual_tryon' %}" class="dash-nav-item"><span class="dash-nav-icon">✨</span> Virtual Try-On</a>
+        <a href="{% url 'profile_edit' %}" class="dash-nav-item"><span class="dash-nav-icon">👤</span> Профиль</a>
+        <div style="margin-top:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1);">
+            {% for key, label in categories %}
+            <a href="{% url 'product_list' %}?category={{ key }}" class="dash-nav-item" style="font-size:12px;">
+                {% if key == 'ustki' %}🧥{% elif key == 'ichki' %}👕{% elif key == 'jemper' %}🧶{% elif key == 'pidjak' %}🤵{% elif key == 'sport' %}⚡{% elif key == 'oyoq' %}👟{% else %}💎{% endif %}
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+        <a href="{% url 'logout' %}" class="dash-nav-item" style="margin-top:auto;color:rgba(255,80,80,0.5);"><span class="dash-nav-icon">🚪</span> Шығыў</a>
+    </div>
+
+    <!-- МАЗМУН -->
+    <div class="dashboard-content">
+        <div class="profile-card">
+            <div class="profile-avatar">{% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}👤{% endif %}</div>
+            <div style="flex:1;">
+                <div class="profile-name">{{ user.get_full_name }}</div>
+                <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:6px;">{{ user.phone }} • {{ user.username }}</div>
+                <div class="profile-tags">
+                    {% if user.size %}<span class="profile-tag">Размер: {{ user.size }}</span>{% endif %}
+                    {% if user.height %}<span class="profile-tag">Бой: {{ user.height|floatformat:0 }} см</span>{% endif %}
+                    {% if user.weight %}<span class="profile-tag">{{ user.weight|floatformat:0 }} кг</span>{% endif %}
+                    {% if user.get_gender_display %}<span class="profile-tag">{{ user.get_gender_display }}</span>{% endif %}
+                </div>
+            </div>
+            {% if bmi %}
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                <div class="bmi-ring">
+                    <div class="bmi-ring-inner">
+                        <div class="bmi-num">{{ bmi }}</div>
+                        <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;">BMI</div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.5);text-align:center;">{{ bmi_category }}</div>
+            </div>
+            {% endif %}
+            <a href="{% url 'profile_edit' %}" style="position:absolute;top:16px;right:16px;color:rgba(255,255,255,0.3);font-size:12px;text-decoration:none;">✏️ Таҳрирлеў</a>
+        </div>
+
+        <!-- СТАТИСТИКА -->
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Буйрытмалар</div><div class="stat-value">{{ orders|length }}</div></div>
+            <div class="stat-card"><div class="stat-label">Себеттеги</div><div class="stat-value">{{ cart_count }}</div></div>
+            <div class="stat-card"><div class="stat-label">Размер</div><div class="stat-value" style="font-size:28px;">{{ user.size|default:'—' }}</div></div>
+            <div class="stat-card"><div class="stat-label">BMI</div><div class="stat-value">{{ bmi|default:'—' }}</div>{% if bmi_category %}<div class="stat-unit">{{ bmi_category }}</div>{% endif %}</div>
+        </div>
+
+        <!-- AI ТАЎСИЯЛАРЫ -->
+        <div>
+            <div class="ai-badge">🤖 AI Таўсия</div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--dark);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Сизге Мас Кийимлер</h2>
+            <div class="cat-pills">
+                <a href="{% url 'product_list' %}" class="cat-pill">Ҳәммеси</a>
+                {% for key, label in categories %}<a href="{% url 'product_list' %}?category={{ key }}" class="cat-pill">{{ label }}</a>{% endfor %}
+            </div>
+            <div class="rec-grid">
+                {% for product in recommendations %}
+                <a href="{% url 'product_detail' product.pk %}" style="text-decoration:none;">
+                <div class="product-card">
+                    <div class="product-img-wrap" style="aspect-ratio:1/1;">
+                        {% if product.main_image %}<img src="{{ product.main_image.url }}" alt="{{ product.name }}" loading="lazy">
+                        {% else %}<div class="product-no-img" style="font-size:32px;">{% if product.category == 'ustki' %}🧥{% elif product.category == 'oyoq' %}👟{% elif product.category == 'sport' %}⚡{% else %}👗{% endif %}</div>{% endif %}
+                    </div>
+                    <div class="product-info" style="padding:12px;">
+                        <div class="product-category">{{ product.get_category_display }}</div>
+                        <div class="product-name" style="font-size:16px;">{{ product.name }}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                            <span class="product-price" style="font-size:15px;">{{ product.price|floatformat:0 }} сўм</span>
+                            <span style="font-size:11px;color:var(--gold);">{{ product.seller.shop_name }}</span>
+                        </div>
+                    </div>
+                </div>
+                </a>
+                {% empty %}
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
+                    <div style="font-size:40px;margin-bottom:12px;">👗</div>
+                    <p>Профиліңизди толтырыңыз — AI сизге мас кийимлерди таўсия береди</p>
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline" style="margin-top:16px;">Профиль Толтырыў</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% if recommendations %}<div style="text-align:center;margin-top:24px;"><a href="{% url 'product_list' %}" class="btn btn-outline">Барлық Өнимлерди Көриў</a></div>{% endif %}
+        </div>
+
+        <!-- СОҢҒЫ БУЙРЫТМАЛАР -->
+        {% if orders %}
+        <div style="margin-top:48px;">
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--dark);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Соңғы Буйрытмалар</h2>
+            <table class="data-table">
+                <thead><tr><th>#</th><th>Сана</th><th>Жалпы</th><th>Статус</th><th></th></tr></thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.pk }}</td>
+                        <td>{{ order.created_at|date:"d.m.Y" }}</td>
+                        <td>{{ order.total_price|floatformat:0 }} сўм</td>
+                        <td><span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                        <td><a href="{% url 'order_detail' order.pk %}" style="color:var(--gold);font-size:12px;">Толық →</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}{{ product.name }} — MODA{% endblock %}
+{% block extra_css %}
+<style>
+.pd-wrap{max-width:1200px;margin:0 auto;padding:48px 40px;}
+.pd-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+.gallery-main{aspect-ratio:3/4;background:var(--cream);overflow:hidden;}
+.gallery-main img{width:100%;height:100%;object-fit:cover;}
+.gallery-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;}
+.thumbs{display:flex;gap:8px;margin-top:8px;}
+.thumb{width:70px;height:90px;overflow:hidden;cursor:pointer;opacity:0.6;transition:opacity 0.2s;border:2px solid transparent;}
+.thumb.active,.thumb:hover{opacity:1;border-color:var(--gold);}
+.thumb img{width:100%;height:100%;object-fit:cover;}
+.pd-brand{font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.pd-name{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--dark);font-weight:300;line-height:1.2;margin-bottom:16px;}
+.pd-price{font-size:28px;color:var(--gold);font-weight:500;letter-spacing:1px;margin-bottom:28px;}
+.pd-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+.pd-tag{padding:4px 12px;border:1px solid var(--border);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);}
+.size-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+.size-opt{width:52px;height:52px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);font-size:13px;cursor:pointer;transition:all 0.2s;background:var(--white);color:var(--text-muted);}
+.size-opt:hover{border-color:var(--dark);color:var(--dark);}
+.size-opt.active{background:var(--dark);color:var(--gold);border-color:var(--dark);}
+.size-opt.oos{opacity:0.3;cursor:not-allowed;text-decoration:line-through;}
+.add-btn{width:100%;padding:16px;background:var(--dark);color:var(--gold);border:none;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.3s;margin-bottom:12px;}
+.add-btn:hover{background:var(--gold);color:var(--dark);}
+.meta-row{display:flex;gap:16px;font-size:13px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.meta-key{color:var(--text-muted);min-width:120px;}
+.rev-item{padding:24px 0;border-bottom:1px solid var(--border);}
+.star{color:#C9A96E;font-size:16px;}
+@media(max-width:768px){.pd-layout{grid-template-columns:1fr;}.pd-wrap{padding:24px 20px;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="pd-wrap">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:32px;letter-spacing:1px;">
+        <a href="{% url 'home' %}" style="color:var(--text-muted);text-decoration:none;">Бас бет</a>
+        <span style="margin:0 10px;">→</span>
+        <a href="{% url 'product_list' %}?category={{ product.category }}" style="color:var(--text-muted);text-decoration:none;">{{ product.get_category_display }}</a>
+        <span style="margin:0 10px;">→</span>
+        <span>{{ product.name }}</span>
+    </div>
+
+    <div class="pd-layout">
+        <!-- ГАЛЕРЕЯ -->
+        <div>
+            <div class="gallery-main" id="mainImg">
+                {% if product.images.all %}<img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" id="mainImgEl">
+                {% else %}<div class="gallery-empty">{% if product.category == 'ustki' %}🧥{% elif product.category == 'oyoq' %}👟{% elif product.category == 'sport' %}⚡{% else %}👗{% endif %}</div>{% endif %}
+            </div>
+            {% if product.images.count > 1 %}
+            <div class="thumbs">
+                {% for img in product.images.all %}
+                <div class="thumb {% if forloop.first %}active{% endif %}" onclick="switchImg('{{ img.image.url }}',this)">
+                    <img src="{{ img.image.url }}" alt="">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- МӘЛИМЕТ -->
+        <div>
+            <div class="pd-brand">{{ product.seller.shop_name }}</div>
+            <h1 class="pd-name">{{ product.name }}</h1>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+                <div class="pd-price">{{ product.price|floatformat:0 }} сўм</div>
+                {% if avg_rating %}
+                <div>
+                    <span class="star">{% for i in '12345' %}{% if forloop.counter <= avg_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                    <span style="font-size:13px;color:var(--text-muted);margin-left:6px;">{{ avg_rating }} ({{ reviews|length }})</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="pd-tags">
+                <span class="pd-tag">{{ product.get_category_display }}</span>
+                <span class="pd-tag">{{ product.get_gender_display }}</span>
+                <span class="pd-tag">{{ product.get_style_display }}</span>
+            </div>
+
+            {% if user.is_authenticated and user.role == 'client' %}
+            <a href="{% url 'virtual_tryon_product' product.pk %}" class="btn btn-outline" style="width:100%;display:block;text-align:center;margin-bottom:12px;">✨ Virtual Try-On — Kiyip Körіw</a>
+            <form method="post" action="{% url 'add_to_cart' product.pk %}">
+                {% csrf_token %}
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">
+                    <span>Размер Таңлаңыз</span>
+                    {% if user.size %}<span style="color:var(--gold);">Сизиң размериңиз: {{ user.size }}</span>{% endif %}
+                </div>
+                <div class="size-opts">
+                    {% for ps in product.sizes.all %}
+                    <label>
+                        <input type="radio" name="size" value="{{ ps.size }}" style="display:none;" required>
+                        <div class="size-opt {% if ps.quantity == 0 %}oos{% endif %} {% if user.size == ps.size %}active{% endif %}"
+                             onclick="if({{ ps.quantity }}>0)selSize(this,'{{ ps.size }}')"
+                             title="{{ ps.quantity }} дона">{{ ps.size }}</div>
+                    </label>
+                    {% empty %}
+                    <p style="color:var(--text-muted);font-size:13px;">Размер мәлимети жоқ</p>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="add-btn">🛒 Себетке Қосыў</button>
+            </form>
+            {% elif not user.is_authenticated %}
+            <a href="{% url 'login' %}" class="add-btn" style="display:block;text-align:center;text-decoration:none;">Кириў ҳәм Сатып Алыў</a>
+            {% endif %}
+
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:28px;">
+                <div class="meta-row"><span class="meta-key">Дүкан</span><span>{{ product.seller.shop_name }}</span></div>
+                {% if product.description %}<div class="meta-row"><span class="meta-key">Сыпатлама</span><span style="color:var(--text-muted);line-height:1.7;">{{ product.description }}</span></div>{% endif %}
+                <div class="meta-row"><span class="meta-key">Жыныс</span><span>{{ product.get_gender_display }}</span></div>
+                <div class="meta-row"><span class="meta-key">Стиль</span><span>{{ product.get_style_display }}</span></div>
+                <div class="meta-row"><span class="meta-key">Көрилген</span><span>{{ product.views_count }} рет</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПІКИРЛЕР -->
+    <div style="margin-top:60px;">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--dark);margin-bottom:32px;">Пікирлер ({{ reviews|length }})</h2>
+        {% if user.is_authenticated and user.role == 'client' %}
+        <div style="background:var(--white);padding:28px;border:1px solid var(--border);margin-bottom:32px;">
+            <h3 style="font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:20px;">Пікир Жазыў</h3>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Баҳа</label>
+                    <select name="rating" class="form-control" style="max-width:200px;">
+                        <option value="5">5 ⭐ — Аджайып</option>
+                        <option value="4">4 ⭐ — Жақсы</option>
+                        <option value="3">3 ⭐ — Орташа</option>
+                        <option value="2">2 ⭐ — Нашар</option>
+                        <option value="1">1 ⭐ — Өте нашар</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Пікириңиз</label>
+                    <textarea name="comment" class="form-control" rows="3" placeholder="Бул өним ҳаққында не ойлайсыз?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Пікир Жибериў</button>
+            </form>
+        </div>
+        {% endif %}
+        {% for review in reviews %}
+        <div class="rev-item">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div>
+                    <span style="font-weight:500;font-size:14px;">{{ review.user.get_full_name }}</span>
+                    <span class="star" style="font-size:14px;margin-left:10px;">{% for i in '12345' %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                </div>
+                <span style="font-size:12px;color:var(--text-muted);">{{ review.created_at|date:"d.m.Y" }}</span>
+            </div>
+            {% if review.comment %}<p style="font-size:14px;color:var(--text-muted);line-height:1.7;">{{ review.comment }}</p>{% endif %}
+        </div>
+        {% empty %}
+        <p style="color:var(--text-muted);font-size:14px;padding:24px 0;">Ҳәзирше пікир жоқ. Биринши болыңыз!</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% if related %}
+<div style="padding:60px 40px;border-top:1px solid var(--border);">
+    <div style="font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">Усыныс</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--dark);margin-bottom:32px;">Уқсас Өнимлер</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;">
+        {% for rp in related %}
+        <a href="{% url 'product_detail' rp.pk %}" style="text-decoration:none;">
+        <div class="product-card">
+            <div class="product-img-wrap">
+                {% if rp.main_image %}<img src="{{ rp.main_image.url }}" alt="{{ rp.name }}" loading="lazy">
+                {% else %}<div class="product-no-img">{% if rp.category == 'oyoq' %}👟{% else %}👗{% endif %}</div>{% endif %}
+            </div>
+            <div class="product-info"><div class="product-name">{{ rp.name }}</div><span class="product-price">{{ rp.price|floatformat:0 }} сўм</span></div>
+        </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+function switchImg(url,thumb){document.getElementById('mainImgEl').src=url;document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));thumb.classList.add('active');}
+function selSize(el,size){document.querySelectorAll('.size-opt').forEach(o=>o.classList.remove('active'));el.classList.add('active');el.previousElementSibling.checked=true;}
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Өнимди Таҳрирлеў — MODA{% endblock %}
+{% block extra_css %}
+<style>
+.page-wrap{max-width:900px;margin:60px auto;padding:0 40px;}
+.form-card{background:var(--white);border:1px solid var(--border);padding:40px;}
+.form-section{margin-bottom:36px;padding-bottom:36px;border-bottom:1px solid var(--border);}
+.form-section:last-child{border-bottom:none;margin-bottom:0;}
+.form-sec-title{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text-muted);margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+.form-sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.size-sel{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:16px;}
+.size-btn{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;font-size:12px;font-family:'Jost',sans-serif;transition:all 0.2s;background:var(--white);color:var(--text-muted);}
+.size-btn.active{background:var(--dark);color:var(--gold);border-color:var(--dark);}
+.size-rows{display:flex;flex-direction:column;gap:8px;}
+.size-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);background:var(--cream);}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-wrap">
+    <a href="{% url 'seller_dashboard' %}" style="display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);text-decoration:none;font-size:13px;margin-bottom:20px;">← Дашбордқа қайтыў</a>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--dark);margin-bottom:40px;">Өнимди Таҳрирлеў</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-card">
+            <div class="form-section">
+                <div class="form-sec-title">Негізги Мәлимет</div>
+                <div class="form-group"><label class="form-label">Өним Аты</label><input type="text" name="name" class="form-control" required value="{{ product.name }}"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Категория</label>
+                        <select name="category" class="form-control">
+                            {% for key, label in form.fields.category.choices %}{% if key %}<option value="{{ key }}" {% if product.category == key %}selected{% endif %}>{{ label }}</option>{% endif %}{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Стиль</label>
+                        <select name="style" class="form-control">
+                            {% for key, label in form.fields.style.choices %}<option value="{{ key }}" {% if product.style == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Баҳа (сўм)</label><input type="number" name="price" class="form-control" value="{{ product.price }}"></div>
+                    <div class="form-group">
+                        <label class="form-label">Жыныс</label>
+                        <select name="gender" class="form-control">
+                            <option value="male" {% if product.gender == 'male' %}selected{% endif %}>Еркек</option>
+                            <option value="female" {% if product.gender == 'female' %}selected{% endif %}>Аял</option>
+                            <option value="unisex" {% if product.gender == 'unisex' %}selected{% endif %}>Унисекс</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">Сыпатлама</label><textarea name="description" class="form-control" rows="4">{{ product.description }}</textarea></div>
+            </div>
+            <div class="form-section">
+                <div class="form-sec-title">Размерлер</div>
+                <div class="size-sel" id="sizePicker">
+                    {% for val, label in size_choices %}
+                    <div class="size-btn {% for ps in product.sizes.all %}{% if ps.size == val %}active{% endif %}{% endfor %}" onclick="toggleSize('{{ val }}',this)" data-size="{{ val }}">{{ val }}</div>
+                    {% endfor %}
+                </div>
+                <div class="size-rows" id="sizeRows">
+                    {% for ps in product.sizes.all %}
+                    <div class="size-row" id="row_{{ ps.size }}">
+                        <span style="width:48px;text-align:center;font-weight:500;color:var(--gold);">{{ ps.size }}</span>
+                        <span style="flex:1;font-size:13px;color:var(--text-muted);">саны:</span>
+                        <input type="hidden" name="sizes" value="{{ ps.size }}">
+                        <input type="number" name="quantities" class="form-control" style="width:80px;" min="0" value="{{ ps.quantity }}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-section">
+                <div class="form-sec-title">Суретлер</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                    {% for img in product.images.all %}<div style="width:80px;height:100px;overflow:hidden;"><img src="{{ img.image.url }}" style="width:100%;height:100%;object-fit:cover;"></div>{% endfor %}
+                </div>
+                <input type="file" name="images" multiple accept="image/*" class="form-control">
+                <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Жаңа суретлер қосыў (мах 5 барлығы)</p>
+            </div>
+            <div style="display:flex;gap:16px;justify-content:flex-end;">
+                <a href="{% url 'seller_dashboard' %}" class="btn btn-outline">Бас тартыў</a>
+                <button type="submit" class="btn btn-gold">Сақлаў</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+const sel={};
+{% for ps in product.sizes.all %}sel['{{ ps.size }}']=true;{% endfor %}
+function toggleSize(size,el){
+    if(sel[size]){const r=document.getElementById('row_'+size);if(r)r.remove();delete sel[size];el.classList.remove('active');}
+    else{sel[size]=true;el.classList.add('active');const r=document.createElement('div');r.className='size-row';r.id='row_'+size;
+    r.innerHTML=`<span style="width:48px;text-align:center;font-weight:500;color:var(--gold);">${size}</span><span style="flex:1;font-size:13px;color:var(--text-muted);">саны:</span><input type="hidden" name="sizes" value="${size}"><input type="number" name="quantities" class="form-control" style="width:80px;" min="0" value="0">`;
+    document.getElementById('sizeRows').appendChild(r);}
+}
+</script>
+{% endblock %}

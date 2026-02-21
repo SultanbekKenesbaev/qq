@@ -1,0 +1,62 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Дизимге алыныў — MODA{% endblock %}
+{% block extra_css %}
+<style>
+.reg-page { min-height:calc(100vh - 140px); display:flex; align-items:center; justify-content:center; padding:60px 20px; background:linear-gradient(160deg,var(--cream) 0%,var(--ivory) 100%); }
+.reg-wrap { max-width:800px; width:100%; text-align:center; }
+.reg-tag { font-size:11px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; margin-bottom:16px; }
+.reg-title { font-family:'Cormorant Garamond',serif; font-size:52px; font-weight:300; color:var(--dark); margin-bottom:60px; }
+.choices { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.choice-card { background:var(--white); border:1px solid var(--border); padding:48px 36px; text-decoration:none; color:var(--text); transition:all 0.4s; position:relative; overflow:hidden; display:block; }
+.choice-card::before { content:''; position:absolute; inset:0; background:var(--dark); transform:translateY(100%); transition:transform 0.4s ease; z-index:0; }
+.choice-card:hover::before { transform:translateY(0); }
+.choice-card > * { position:relative; z-index:1; }
+.choice-icon { font-size:56px; margin-bottom:24px; display:block; transition:transform 0.3s; }
+.choice-card:hover .choice-icon { transform:scale(1.1); }
+.choice-title { font-family:'Cormorant Garamond',serif; font-size:28px; margin-bottom:12px; transition:color 0.4s; }
+.choice-card:hover .choice-title { color:var(--gold); }
+.choice-desc { font-size:14px; color:var(--text-muted); line-height:1.8; transition:color 0.4s; }
+.choice-card:hover .choice-desc { color:rgba(255,255,255,0.5); }
+.choice-feats { margin-top:24px; display:flex; flex-direction:column; gap:8px; }
+.choice-feat { font-size:12px; display:flex; align-items:center; gap:8px; color:var(--text-muted); transition:color 0.4s; }
+.choice-card:hover .choice-feat { color:rgba(255,255,255,0.5); }
+.choice-feat::before { content:'✓'; color:var(--gold); }
+.choice-btn { display:inline-block; margin-top:28px; padding:12px 32px; border:1px solid var(--gold); color:var(--gold); font-size:12px; letter-spacing:2px; text-transform:uppercase; transition:all 0.4s; }
+.choice-card:hover .choice-btn { background:var(--gold); color:var(--dark); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="reg-page">
+    <div class="reg-wrap">
+        <div class="reg-tag">Кириc</div>
+        <h1 class="reg-title">Аккаунт Дизимге Алыныў</h1>
+        <div class="choices">
+            <a href="{% url 'register_client' %}" class="choice-card">
+                <span class="choice-icon">👤</span>
+                <h2 class="choice-title">Мен Сатып Аламан</h2>
+                <p class="choice-desc">Кийим алыў, AI таўсия, размер бойынша фильтрлеў</p>
+                <div class="choice-feats">
+                    <div class="choice-feat">AI таўсия системасы</div>
+                    <div class="choice-feat">Размерге сай кийим</div>
+                    <div class="choice-feat">Буйрытма тарийхы</div>
+                    <div class="choice-feat">BMI есаплаў</div>
+                </div>
+                <span class="choice-btn">Klient болыў</span>
+            </a>
+            <a href="{% url 'register_seller' %}" class="choice-card">
+                <span class="choice-icon">🏪</span>
+                <h2 class="choice-title">Мен Сатамын</h2>
+                <p class="choice-desc">Дүкан ашыў, өнимлер қосыў, буйрытмалар басқарыў</p>
+                <div class="choice-feats">
+                    <div class="choice-feat">Өнимлер қосыў</div>
+                    <div class="choice-feat">Буйрытмалар қабыл алыў</div>
+                    <div class="choice-feat">Статистика</div>
+                    <div class="choice-feat">Кирис есаплаў</div>
+                </div>
+                <span class="choice-btn">Sotuvchi болыў</span>
+            </a>
+        </div>
+        <p style="margin-top:36px;font-size:14px;color:var(--text-muted);">Аккаунтыңыз бар ма? <a href="{% url 'login' %}" style="color:var(--gold);text-decoration:none;">Кириў →</a></p>
+    </div>
+</div>
+{% endblock %}

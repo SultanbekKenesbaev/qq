@@ -1,0 +1,130 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Өнимлер — MODA{% endblock %}
+{% block extra_css %}
+<style>
+.shop-header{background:var(--dark);padding:60px 40px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;}
+.shop-title{font-family:'Cormorant Garamond',serif;font-size:52px;color:var(--white);font-weight:300;}
+.shop-title span{color:var(--gold);font-style:italic;}
+.search-bar{display:flex;max-width:500px;width:100%;border:1px solid rgba(201,169,110,0.4);}
+.search-bar input{flex:1;padding:14px 20px;background:transparent;border:none;color:var(--white);font-family:'Jost',sans-serif;font-size:14px;outline:none;}
+.search-bar input::placeholder{color:rgba(255,255,255,0.3);}
+.search-bar button{padding:14px 24px;background:var(--gold);border:none;cursor:pointer;font-size:16px;}
+.sort-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 40px;border-bottom:1px solid var(--border);background:var(--white);}
+.sort-tabs{display:flex;}
+.sort-tab{padding:8px 20px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;text-decoration:none;color:var(--text-muted);border:1px solid var(--border);border-right:none;transition:all 0.2s;}
+.sort-tab:last-child{border-right:1px solid var(--border);}
+.sort-tab:hover,.sort-tab.active{background:var(--dark);color:var(--gold);border-color:var(--dark);}
+.price-range{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.no-result{text-align:center;padding:80px 40px;color:var(--text-muted);}
+</style>
+{% endblock %}
+{% block content %}
+<div class="shop-header">
+    <div>
+        <div style="font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">Барлық Өнимлер</div>
+        <h1 class="shop-title">Коллекция<span>.</span></h1>
+    </div>
+    <form method="get" class="search-bar">
+        {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}">{% endif %}
+        <input type="text" name="q" placeholder="Өним іздеў..." value="{{ request.GET.q }}">
+        <button type="submit">🔍</button>
+    </form>
+</div>
+
+<div class="sort-bar">
+    <div class="sort-tabs">
+        <a href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=-created_at" class="sort-tab {% if not request.GET.sort or request.GET.sort == '-created_at' %}active{% endif %}">Жаңа</a>
+        <a href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=price" class="sort-tab {% if request.GET.sort == 'price' %}active{% endif %}">Арзан</a>
+        <a href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=-price" class="sort-tab {% if request.GET.sort == '-price' %}active{% endif %}">Қымбат</a>
+        <a href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=-views_count" class="sort-tab {% if request.GET.sort == '-views_count' %}active{% endif %}">Популяр</a>
+    </div>
+    <span style="font-size:13px;color:var(--text-muted);">{{ products|length }} өним</span>
+</div>
+
+{% if current_category or current_gender or current_size or request.GET.q %}
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 40px;background:var(--cream);border-bottom:1px solid var(--border);">
+    <span style="font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;padding:4px 0;">Фильтрлер:</span>
+    {% if current_category %}<a href="?" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--dark);color:var(--gold);font-size:11px;text-decoration:none;">{{ current_category }} ✕</a>{% endif %}
+    {% if request.GET.q %}<a href="?" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--dark);color:var(--gold);font-size:11px;text-decoration:none;">"{{ request.GET.q }}" ✕</a>{% endif %}
+    <a href="{% url 'product_list' %}" style="font-size:11px;color:var(--text-muted);text-decoration:none;padding:4px 12px;border:1px solid var(--border);">Тазалаў</a>
+</div>
+{% endif %}
+
+<div class="layout-sidebar" style="padding:32px 40px;">
+    <!-- ФИЛЬТРЛЕР БОКОВОЙ ПАНЕЛЬ -->
+    <form method="get" class="sidebar">
+        <h3>Фильтрлер</h3>
+        <div class="filter-group">
+            <span class="filter-label">Категория</span>
+            {% for key, label in categories %}
+            <label class="filter-option">
+                <input type="radio" name="category" value="{{ key }}" {% if current_category == key %}checked{% endif %}>
+                {{ label }}
+            </label>
+            {% endfor %}
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Жыныс</span>
+            <label class="filter-option"><input type="radio" name="gender" value="male" {% if current_gender == 'male' %}checked{% endif %}> Еркек</label>
+            <label class="filter-option"><input type="radio" name="gender" value="female" {% if current_gender == 'female' %}checked{% endif %}> Аял</label>
+            <label class="filter-option"><input type="radio" name="gender" value="unisex" {% if current_gender == 'unisex' %}checked{% endif %}> Унисекс</label>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Размер</span>
+            <label class="filter-option"><input type="radio" name="size" value="XS" {% if current_size == 'XS' %}checked{% endif %}> XS</label>
+            <label class="filter-option"><input type="radio" name="size" value="S" {% if current_size == 'S' %}checked{% endif %}> S</label>
+            <label class="filter-option"><input type="radio" name="size" value="M" {% if current_size == 'M' %}checked{% endif %}> M</label>
+            <label class="filter-option"><input type="radio" name="size" value="L" {% if current_size == 'L' %}checked{% endif %}> L</label>
+            <label class="filter-option"><input type="radio" name="size" value="XL" {% if current_size == 'XL' %}checked{% endif %}> XL</label>
+            <label class="filter-option"><input type="radio" name="size" value="XXL" {% if current_size == 'XXL' %}checked{% endif %}> XXL</label>
+            <label class="filter-option"><input type="radio" name="size" value="XXXL" {% if current_size == 'XXXL' %}checked{% endif %}> XXXL</label>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Баҳа (сўм)</span>
+            <div class="price-range">
+                <input type="number" name="min_price" class="form-control" placeholder="Мин" value="{{ request.GET.min_price }}" style="padding:8px 10px;font-size:13px;">
+                <input type="number" name="max_price" class="form-control" placeholder="Макс" value="{{ request.GET.max_price }}" style="padding:8px 10px;font-size:13px;">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Фильтрлеў</button>
+        <a href="{% url 'product_list' %}" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--text-muted);text-decoration:none;">Тазалаў</a>
+    </form>
+
+    <!-- ӨНИМЛЕР СЕТКИ -->
+    <div>
+        {% if products %}
+        <div class="product-grid" style="padding:0;">
+            {% for product in products %}
+            <a href="{% url 'product_detail' product.pk %}" style="text-decoration:none;">
+            <div class="product-card">
+                <div class="product-img-wrap">
+                    {% if product.main_image %}<img src="{{ product.main_image.url }}" alt="{{ product.name }}" loading="lazy">
+                    {% else %}<div class="product-no-img">{% if product.category == 'ustki' %}🧥{% elif product.category == 'oyoq' %}👟{% elif product.category == 'sport' %}⚡{% elif product.category == 'aksesuar' %}💎{% elif product.category == 'pidjak' %}🤵{% else %}👗{% endif %}</div>{% endif %}
+                    <span class="product-badge">{{ product.get_category_display }}</span>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">{{ product.seller.shop_name }}</div>
+                    <div class="product-name">{{ product.name }}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+                        <span class="product-price">{{ product.price|floatformat:0 }} сўм</span>
+                        <span style="font-size:11px;color:var(--text-muted);">{{ product.get_gender_display }}</span>
+                    </div>
+                    <div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;">
+                        {% for ps in product.available_sizes %}<span style="border:1px solid var(--border);padding:2px 7px;font-size:10px;color:var(--text-muted);">{{ ps.size }}</span>{% endfor %}
+                    </div>
+                </div>
+            </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-result">
+            <div style="font-size:64px;margin-bottom:20px;">🔍</div>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--dark);margin-bottom:8px;">Өним Табылмады</h3>
+            <p>Басқа фильтрлер менен іздеп көриңиз</p>
+            <a href="{% url 'product_list' %}" class="btn btn-outline" style="margin-top:24px;">Фильтрлерди Тазалаў</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

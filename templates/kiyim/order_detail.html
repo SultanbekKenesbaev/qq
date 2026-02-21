@@ -1,0 +1,42 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Буйрытма #{{ order.pk }} — MODA{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:60px auto;padding:0 40px;">
+    <a href="{% url 'orders_list' %}" style="display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);text-decoration:none;font-size:13px;margin-bottom:32px;">← Буйрытмаларға қайтыў</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;">
+        <div>
+            <div style="font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">Буйрытма</div>
+            <h1 style="font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--dark);">#{{ order.pk }}</h1>
+        </div>
+        <span class="badge badge-{{ order.status }}" style="font-size:13px;padding:8px 20px;">{{ order.get_status_display }}</span>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--border);padding:32px;margin-bottom:24px;">
+        <table class="data-table">
+            <thead><tr><th>Өним</th><th>Размер</th><th>Саны</th><th>Баҳа</th><th>Жалпы</th></tr></thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>
+                        <a href="{% url 'product_detail' item.product.pk %}" style="color:var(--dark);text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:17px;">{{ item.product.name }}</a>
+                        <div style="font-size:11px;color:var(--text-muted);">{{ item.product.seller.shop_name }}</div>
+                    </td>
+                    <td>{{ item.size }}</td><td>{{ item.quantity }}</td><td>{{ item.price|floatformat:0 }}</td>
+                    <td style="color:var(--gold);font-weight:500;">{{ item.subtotal|floatformat:0 }} сўм</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div style="background:var(--white);border:1px solid var(--border);padding:24px;">
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Мекен-жай</div>
+            <p style="font-size:14px;line-height:1.7;">{{ order.address|default:'Көрсетилмеген' }}</p>
+        </div>
+        <div style="background:var(--white);border:1px solid var(--border);padding:24px;">
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Жиынтық</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);">{{ order.total_price|floatformat:0 }} <span style="font-size:18px;">сўм</span></div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">{{ order.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'kiyim/base.html' %}
+{% block title %}Себет — MODA{% endblock %}
+{% block content %}
+<div style="max-width:1100px;margin:60px auto;padding:0 40px;">
+    <div style="margin-bottom:40px;">
+        <div style="font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">Менің Себетим</div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;color:var(--dark);">Себет</h1>
+    </div>
+    {% if items %}
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:40px;align-items:start;">
+        <div>
+            {% for item in items %}
+            <div style="display:grid;grid-template-columns:100px 1fr auto;gap:20px;padding:24px 0;border-bottom:1px solid var(--border);align-items:center;">
+                <div style="aspect-ratio:1/1;background:var(--cream);overflow:hidden;">
+                    {% if item.product.main_image %}<img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;">{% if item.product.category == 'oyoq' %}👟{% else %}👗{% endif %}</div>{% endif %}
+                </div>
+                <div>
+                    <div style="font-size:11px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">{{ item.product.get_category_display }}</div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--dark);margin-bottom:6px;">{{ item.product.name }}</div>
+                    <div style="font-size:13px;color:var(--text-muted);">Размер: <strong>{{ item.size }}</strong> • {{ item.quantity }} дона</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">{{ item.product.seller.shop_name }}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:18px;color:var(--gold);font-weight:500;margin-bottom:12px;">{{ item.total|floatformat:0 }} сўм</div>
+                    <form method="post" action="{% url 'remove_from_cart' item.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;letter-spacing:1px;transition:color 0.2s;" onmouseover="this.style.color='var(--error)'" onmouseout="this.style.color='var(--text-muted)'">✕ Өшириў</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div>
+            <div style="background:var(--white);border:1px solid var(--border);padding:32px;position:sticky;top:90px;">
+                <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--dark);margin-bottom:24px;">Буйрытма Жиынтығы</h2>
+                {% for item in items %}
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px;color:var(--text-muted);">
+                    <span>{{ item.product.name }} ({{ item.size }}) × {{ item.quantity }}</span>
+                    <span>{{ item.total|floatformat:0 }}</span>
+                </div>
+                {% endfor %}
+                <div style="border-top:1px solid var(--border);margin:20px 0;padding-top:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:14px;letter-spacing:1px;text-transform:uppercase;">Жалпы</span>
+                        <span style="font-size:24px;color:var(--gold);font-weight:500;">{{ total|floatformat:0 }} сўм</span>
+                    </div>
+                </div>
+                <form method="post" action="{% url 'checkout' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label">Жеткериў Мекен-жайы</label>
+                        <textarea name="address" class="form-control" rows="3" required placeholder="Толық мекен-жайыңызды кириңиз..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-gold" style="width:100%;font-size:13px;">Буйрытма Бериў</button>
+                </form>
+                <a href="{% url 'product_list' %}" style="display:block;text-align:center;margin-top:16px;font-size:12px;color:var(--text-muted);text-decoration:none;letter-spacing:1px;">← Алыўды Жалғастырыў</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:80px 40px;border:1px dashed var(--border);">
+        <div style="font-size:64px;margin-bottom:20px;">🛒</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--dark);margin-bottom:12px;">Себет Бос</h2>
+        <p style="color:var(--text-muted);margin-bottom:32px;">Өнимлер қосыңыз ҳәм алыўды баслаңыз</p>
+        <a href="{% url 'product_list' %}" class="btn btn-gold">Алыўды Баслаў</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
