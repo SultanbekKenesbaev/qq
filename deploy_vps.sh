@@ -6,7 +6,7 @@ set -Eeuo pipefail
 # Existing projects are not removed or modified.
 
 APP_NAME="${APP_NAME:-qq}"
-APP_DOMAIN="${APP_DOMAIN:-mydomen.uz}"
+APP_DOMAIN="${APP_DOMAIN:-routemotion.uz}"
 APP_USER="${APP_USER:-qqapp}"
 APP_GROUP="${APP_GROUP:-$APP_USER}"
 APP_BASE_DIR="${APP_BASE_DIR:-/opt/$APP_NAME}"
